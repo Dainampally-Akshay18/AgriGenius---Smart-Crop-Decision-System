@@ -86,8 +86,17 @@ def train_random_forest(dataset_path: str, models_dir: str):
     train_accuracy = accuracy_score(y_train, y_pred_train)
     test_accuracy = accuracy_score(y_test, y_pred_test)
     
+    # Import additional metrics
+    from sklearn.metrics import precision_score, recall_score, f1_score
+    test_precision = precision_score(y_test, y_pred_test, average='weighted', zero_division=0)
+    test_recall = recall_score(y_test, y_pred_test, average='weighted', zero_division=0)
+    test_f1 = f1_score(y_test, y_pred_test, average='weighted', zero_division=0)
+    
     print(f"Train Accuracy: {train_accuracy:.4f}")
     print(f"Test Accuracy: {test_accuracy:.4f}")
+    print(f"Test Precision: {test_precision:.4f}")
+    print(f"Test Recall: {test_recall:.4f}")
+    print(f"Test F1 Score: {test_f1:.4f}")
     print()
     
     print("Classification Report (Test Set):")
@@ -128,6 +137,14 @@ def train_random_forest(dataset_path: str, models_dir: str):
         print("✓ Model meets acceptance criteria!")
     else:
         print("✗ Model does not meet acceptance criteria")
+    
+    return {
+        'model': 'Random Forest',
+        'accuracy': test_accuracy,
+        'precision': test_precision,
+        'recall': test_recall,
+        'f1': test_f1
+    }
 
 
 if __name__ == "__main__":
