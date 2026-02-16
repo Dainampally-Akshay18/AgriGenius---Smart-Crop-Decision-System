@@ -7,7 +7,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import config
 from app.utils.logger import logger
-from app.routers import auth, predict, weather
+from app.routers import auth, predict, weather, evaluation
 
 # Add project root to Python path to allow ml module imports
 project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -37,6 +37,7 @@ app.add_middleware(
 app.include_router(auth.router, prefix="/api")
 app.include_router(predict.router, prefix="/api")
 app.include_router(weather.router, prefix="/api")
+app.include_router(evaluation.router, prefix="/api")
 
 
 @app.get("/health")
