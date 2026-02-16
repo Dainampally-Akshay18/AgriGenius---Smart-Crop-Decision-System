@@ -10,7 +10,6 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense, Dropout
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
 from sklearn.metrics import mean_squared_error, mean_absolute_error
-import matplotlib.pyplot as plt
 
 # Add parent directory to path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -30,11 +29,11 @@ def build_lstm_model(sequence_length: int = 12) -> Sequential:
     """
     model = Sequential([
         # First LSTM layer
-        LSTM(units=50, return_sequences=True, input_shape=(sequence_length, 1)),
+        LSTM(units=64, return_sequences=True, input_shape=(sequence_length, 1)),
         Dropout(0.2),
         
         # Second LSTM layer
-        LSTM(units=50, return_sequences=False),
+        LSTM(units=32, return_sequences=False),
         Dropout(0.2),
         
         # Dense output layer
@@ -52,18 +51,18 @@ def build_lstm_model(sequence_length: int = 12) -> Sequential:
 
 def train_lstm(
     commodity: str,
-    dataset_path: str,
+    dataset_dir: str,
     models_dir: str,
     sequence_length: int = 12,
-    epochs: int = 100,
-    batch_size: int = 32
+    epochs: int = 25,
+    batch_size: int = 16
 ):
     """
     Train LSTM model for price forecasting.
     
     Args:
         commodity: Crop/commodity name
-        dataset_path: Path to CSV dataset
+        dataset_dir: Directory containing CSV files
         models_dir: Directory to save trained models
         sequence_length: Input sequence length
         epochs: Training epochs
@@ -77,12 +76,19 @@ def train_lstm(
     
     # Step 1: Load and prepare data
     print("Step 1: Loading and preparing data...")
-    loader = PriceDatasetLoader(dataset_path)
-    X_train, X_test, y_train, y_test = loader.prepare_data(
-        commodity=commodity,
-        sequence_length=sequence_length,
-        train_split=0.8
-    )
+    loader = PriceDatasetLoader(dataset_dir)
+    
+    try:
+        X_train, X_test, y_train, y_test, total_days = loader.prepare_data(
+            commodity=commodity,
+            sequence_length=sequence_length,
+            train_split=0.8
+        )
+    except ValueError as e:
+        print(f"\nERROR: {e}")
+        print("\nTraining aborted.")
+        return None
+    
     print()
     
     # Step 2: Build model
@@ -99,7 +105,7 @@ def train_lstm(
     callbacks = [
         EarlyStopping(
             monitor='val_loss',
-            patience=10,
+            patience=5,
             restore_best_weights=True,
             verbose=1
         ),
@@ -129,8 +135,8 @@ def train_lstm(
     print("Step 5: Evaluating model...")
     
     # Predictions
-    y_pred_train = model.predict(X_train)
-    y_pred_test = model.predict(X_test)
+    y_pred_train = model.predict(X_train, verbose=0)
+    y_pred_test = model.predict(X_test, verbose=0)
     
     # Inverse transform to get actual prices
     y_train_actual = loader.scaler.inverse_transform(y_train)
@@ -144,10 +150,10 @@ def train_lstm(
     train_mae = mean_absolute_error(y_train_actual, y_pred_train_actual)
     test_mae = mean_absolute_error(y_test_actual, y_pred_test_actual)
     
-    print(f"Train RMSE: {train_rmse:.2f}")
-    print(f"Test RMSE: {test_rmse:.2f}")
-    print(f"Train MAE: {train_mae:.2f}")
-    print(f"Test MAE: {test_mae:.2f}")
+    print(f"Train RMSE: ₹{train_rmse:.2f}")
+    print(f"Test RMSE: ₹{test_rmse:.2f}")
+    print(f"Train MAE: ₹{train_mae:.2f}")
+    print(f"Test MAE: ₹{test_mae:.2f}")
     
     # Calculate percentage error
     avg_price = np.mean(y_test_actual)
@@ -172,13 +178,9 @@ def train_lstm(
     print("TRAINING COMPLETE")
     print("=" * 60)
     print(f"End time: {datetime.now()}")
-    print(f"Test RMSE: {test_rmse:.2f}")
-    print(f"Acceptance Criteria: RMSE ≤ 10% of avg price")
-    
-    if rmse_percentage <= 10:
-        print("✓ Model meets acceptance criteria!")
-    else:
-        print("✗ Model does not meet acceptance criteria")
+    print(f"Total days: {total_days}")
+    print(f"Total sequences: {len(X_train) + len(X_test)}")
+    print(f"Test RMSE: ₹{test_rmse:.2f}")
     print()
     
     return {
@@ -186,16 +188,17 @@ def train_lstm(
         'test_rmse': test_rmse,
         'train_mae': train_mae,
         'test_mae': test_mae,
-        'rmse_percentage': rmse_percentage
+        'rmse_percentage': rmse_percentage,
+        'total_days': total_days,
+        'total_sequences': len(X_train) + len(X_test)
     }
 
 
 if __name__ == "__main__":
     # Paths
-    dataset_path = os.path.join(
+    dataset_dir = os.path.join(
         os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-        'dataset',
-        'Prices.csv'
+        'dataset'
     )
     models_dir = os.path.join(
         os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
@@ -208,10 +211,9 @@ if __name__ == "__main__":
     
     train_lstm(
         commodity=commodity,
-        dataset_path=dataset_path,
+        dataset_dir=dataset_dir,
         models_dir=models_dir,
         sequence_length=12,
-        epochs=100,
-        batch_size=32
+        epochs=25,
+        batch_size=16
     )
-

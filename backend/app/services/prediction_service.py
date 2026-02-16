@@ -8,6 +8,14 @@ from datetime import datetime
 from ml.inference.predict_crop import predict_crop
 from ml.inference.predict_price import predict_price
 
+# Import LSTM price predictor
+try:
+    from ml.inference.predict_price_lstm import predict_future_prices
+    LSTM_AVAILABLE = True
+except Exception as e:
+    LSTM_AVAILABLE = False
+    predict_future_prices = None
+
 from app.utils.logger import logger
 
 
@@ -97,9 +105,23 @@ class PredictionService:
         for crop_data in result['top_3_recommendations']:
             crop_name = crop_data['crop']
             
-            # Get price prediction (stub for now)
-            price_result = predict_price(crop_name, months=1)
-            estimated_price = price_result['future_prices'][0] if price_result['future_prices'] else 2000.0
+            # Get price prediction using LSTM (with fallback to stub)
+            try:
+                if LSTM_AVAILABLE:
+                    # Use real LSTM model for 6-day forecast
+                    future_prices = predict_future_prices(crop_name, months=6)
+                    estimated_price = future_prices[0] if future_prices else 2000.0
+                    logger.info(f"LSTM prediction for {crop_name}: {future_prices[:3]}...")
+                else:
+                    # Fallback to stub
+                    price_result = predict_price(crop_name, months=1)
+                    estimated_price = price_result['future_prices'][0] if price_result['future_prices'] else 2000.0
+                    logger.info(f"Using stub prediction for {crop_name}")
+            except Exception as e:
+                # Graceful fallback on any error
+                logger.warning(f"LSTM prediction failed for {crop_name}: {e}. Using fallback.")
+                price_result = predict_price(crop_name, months=1)
+                estimated_price = price_result['future_prices'][0] if price_result['future_prices'] else 2000.0
             
             recommendations.append({
                 'crop': crop_name,

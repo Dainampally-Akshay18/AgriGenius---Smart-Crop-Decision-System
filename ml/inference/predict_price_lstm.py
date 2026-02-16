@@ -41,7 +41,10 @@ class LSTMPricePredictor:
         # Load LSTM model
         model_path = os.path.join(models_dir, 'lstm_model.keras')
         if not os.path.exists(model_path):
-            raise FileNotFoundError(f"LSTM model not found at {model_path}. Please train the model first.")
+            raise FileNotFoundError(
+                f"LSTM model not found at {model_path}. "
+                f"Please train the model first: python training/train_lstm.py"
+            )
         
         self.model = keras.models.load_model(model_path)
         print(f"✓ LSTM model loaded from {model_path}")
@@ -49,15 +52,17 @@ class LSTMPricePredictor:
         # Load scaler
         scaler_path = os.path.join(models_dir, 'lstm_scaler.pkl')
         if not os.path.exists(scaler_path):
-            raise FileNotFoundError(f"Scaler not found at {scaler_path}. Please train the model first.")
+            raise FileNotFoundError(
+                f"Scaler not found at {scaler_path}. "
+                f"Please train the model first: python training/train_lstm.py"
+            )
         
         self.scaler = PriceDatasetLoader.load_scaler(scaler_path)
         
-        # Dataset path
-        self.dataset_path = os.path.join(
+        # Dataset directory
+        self.dataset_dir = os.path.join(
             os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-            'dataset',
-            'Prices.csv'
+            'dataset'
         )
         
         print("✓ All artifacts loaded successfully")
@@ -69,28 +74,27 @@ class LSTMPricePredictor:
         sequence_length: int = 12
     ) -> List[float]:
         """
-        Predict future prices for a crop.
+        Predict future prices for a crop using recursive forecasting.
         
         Args:
             crop_name: Crop/commodity name
-            months: Number of months to predict
-            sequence_length: Input sequence length (default: 12)
+            months: Number of days to predict (parameter name kept for API compatibility)
+            sequence_length: Input sequence length in days (default: 12)
             
         Returns:
-            List of predicted prices
+            List of predicted daily prices
         """
-        print(f"\nPredicting prices for {crop_name} ({months} months ahead)...")
+        print(f"\nPredicting prices for {crop_name} ({months} days ahead)...")
         
         # Load last sequence from dataset
-        loader = PriceDatasetLoader(self.dataset_path)
+        loader = PriceDatasetLoader(self.dataset_dir)
         
         try:
             last_sequence = loader.get_last_sequence(crop_name, sequence_length)
         except Exception as e:
             print(f"Error loading data for {crop_name}: {e}")
-            print("Using default prediction...")
-            # Return stub prices if data not available
-            return self._get_stub_prices(crop_name, months)
+            print("Using fallback prediction...")
+            return self._get_fallback_prices(crop_name, months)
         
         # Store scaler for inverse transform
         self.scaler = loader.scaler
@@ -100,7 +104,7 @@ class LSTMPricePredictor:
         current_sequence = last_sequence.copy()
         
         for i in range(months):
-            # Predict next month
+            # Predict next day
             next_pred_scaled = self.model.predict(current_sequence, verbose=0)
             
             # Inverse transform to get actual price
@@ -115,20 +119,20 @@ class LSTMPricePredictor:
                 axis=1
             )
         
-        print(f"Predicted prices: {predictions}")
+        print(f"Predicted prices: {[f'₹{p:.2f}' for p in predictions]}")
         
         return predictions
     
-    def _get_stub_prices(self, crop_name: str, months: int) -> List[float]:
+    def _get_fallback_prices(self, crop_name: str, months: int) -> List[float]:
         """
-        Get stub prices when data is not available.
+        Get fallback prices when data is not available.
         
         Args:
             crop_name: Crop name
             months: Number of months
             
         Returns:
-            List of stub prices
+            List of fallback prices
         """
         # Base prices for common crops
         base_prices = {
@@ -139,7 +143,10 @@ class LSTMPricePredictor:
             'sugarcane': 2800,
             'jute': 2200,
             'coffee': 4500,
-            'tea': 3800
+            'tea': 3800,
+            'potato': 1200,
+            'onion': 1500,
+            'tomato': 1800
         }
         
         base_price = base_prices.get(crop_name.lower(), 2000)
@@ -161,10 +168,10 @@ def predict_future_prices(crop_name: str, months: int = 6) -> List[float]:
     
     Args:
         crop_name: Crop/commodity name
-        months: Number of months to predict
+        months: Number of days to predict (parameter name kept for API compatibility)
         
     Returns:
-        List of predicted prices
+        List of predicted daily prices
     """
     predictor = LSTMPricePredictor()
     return predictor.predict_future_prices(crop_name, months)
@@ -181,14 +188,14 @@ if __name__ == "__main__":
     months = 6
     
     print(f"\nCrop: {crop}")
-    print(f"Forecast period: {months} months")
+    print(f"Forecast period: {months} days")
     
     try:
         prices = predict_future_prices(crop, months)
         
-        print("\nPredicted Prices:")
+        print("\nPredicted Daily Prices:")
         for i, price in enumerate(prices, 1):
-            print(f"  Month {i}: ₹{price:.2f}")
+            print(f"  Day {i}: ₹{price:.2f}")
     
     except Exception as e:
         print(f"Error: {e}")
