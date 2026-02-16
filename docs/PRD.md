@@ -236,7 +236,26 @@ Display:
 
 ### Database
 
-* MySQL 
+* Google Firebase 
+Database Design (Firebase Firestore)
+
+Collections:
+
+users
+- id
+- name
+- email
+- password_hash
+- created_at
+
+prediction_history
+- user_id
+- input_payload
+- result_payload
+- timestamp
+
+Authentication is custom JWT based.
+Firebase Auth must NOT be used.
 
 ### External
 
@@ -954,11 +973,22 @@ Robustness Metrics:
 ## 17.1 Environment (.env)
 
 ```
-DB_HOST=
-DB_USER=
-DB_PASSWORD=
-JWT_SECRET=
-WEATHER_KEY=
+
+APP_ENV=development
+LOG_LEVEL=info
+
+# Security
+JWT_SECRET=super_secret_key_change_in_production
+
+# Weather
+WEATHER_API_KEY=your_openweather_api_key
+
+# Firebase Admin SDK (BACKEND ONLY)
+FIREBASE_PROJECT_ID=your_project_id
+FIREBASE_CLIENT_EMAIL=firebase-adminsdk-xxxxx@your_project_id.iam.gserviceaccount.com
+FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nPASTE_KEY_HERE\n-----END PRIVATE KEY-----\n"
+
+
 ```
 
 ---
@@ -976,7 +1006,7 @@ WEATHER_KEY=
 - Automatic builds from GitHub repository  
 - HTTPS enabled by default  
 - Environment variables managed via Render secrets  
-- Persistent MySQL connection
+- Persistent Firebase  connection
 
 ---
 
