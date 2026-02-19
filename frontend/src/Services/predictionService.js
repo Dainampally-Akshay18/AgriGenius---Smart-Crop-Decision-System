@@ -51,3 +51,72 @@ export const predictCrop = async (formData) => {
     throw error;
   }
 };
+
+// Call noise evaluation API
+export const evaluateNoise = async (formData) => {
+  try {
+    const requestBody = {
+      N: parseFloat(formData.N),
+      P: parseFloat(formData.P),
+      K: parseFloat(formData.K),
+      soilType: formData.soilType,
+      season: formData.season,
+      location: formData.city
+    };
+
+    const data = await apiRequest('/api/evaluate/noise', {
+      method: 'POST',
+      body: JSON.stringify(requestBody)
+    });
+
+    return data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+// Call missing feature evaluation API
+export const evaluateMissing = async (formData) => {
+  try {
+    const requestBody = {
+      N: parseFloat(formData.N),
+      P: parseFloat(formData.P),
+      K: parseFloat(formData.K),
+      soilType: formData.soilType,
+      season: formData.season,
+      location: formData.city
+    };
+
+    const data = await apiRequest('/api/evaluate/missing', {
+      method: 'POST',
+      body: JSON.stringify(requestBody)
+    });
+
+    return data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+// Call model agreement evaluation API
+export const evaluateAgreement = async (formData) => {
+  try {
+    const requestBody = {
+      N: parseFloat(formData.N),
+      P: parseFloat(formData.P),
+      K: parseFloat(formData.K),
+      soilType: formData.soilType,
+      season: formData.season,
+      location: formData.city
+    };
+
+    const data = await apiRequest('/api/evaluate/agreement', {
+      method: 'POST',
+      body: JSON.stringify(requestBody)
+    });
+
+    return data;
+  } catch (error) {
+    throw error;
+  }
+};
