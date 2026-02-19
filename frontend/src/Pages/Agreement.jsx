@@ -45,7 +45,7 @@ function Agreement() {
       <Sidebar />
 
       {/* Main Content */}
-      <div className="flex-1 ml-64 min-h-[calc(100vh-4rem)] bg-white">
+      <div className="flex-1 md:ml-64 min-h-[calc(100vh-4rem)] bg-white w-full md:w-auto">
         <div className="p-8 max-w-6xl mx-auto">
           {/* Header */}
           <div className="mb-8">

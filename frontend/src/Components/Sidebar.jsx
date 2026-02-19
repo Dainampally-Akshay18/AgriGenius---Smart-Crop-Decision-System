@@ -32,10 +32,10 @@ function Sidebar() {
 
       {/* Sidebar */}
       <aside
-        className={`bg-gradient-to-b from-gray-900 to-gray-800 border-r border-gray-700/50 transition-all duration-300 shadow-xl overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800
-          ${/* Desktop: Fixed */ 'hidden md:block fixed left-0 top-16 h-[calc(100vh-4rem)]'}
-          ${/* Mobile: Overlay Drawer */ sidebarOpen ? 'fixed left-0 top-16 h-[calc(100vh-4rem)] w-64 z-40' : 'fixed -left-64 top-16 h-[calc(100vh-4rem)] w-64 z-40'}
-          ${/* Expanded state */ expanded ? 'md:w-64' : 'md:w-20'}`}
+        className={`fixed top-16 h-[calc(100vh-4rem)] w-64 bg-gradient-to-b from-gray-900 to-gray-800 border-r border-gray-700/50 transition-all duration-300 shadow-xl overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800 z-40
+          hidden md:block md:left-0 md:z-auto
+          ${expanded ? 'md:w-64' : 'md:w-20'}
+          ${sidebarOpen ? 'left-0' : '-left-64'}`}
       >
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-6 border-b border-gray-700/50">
