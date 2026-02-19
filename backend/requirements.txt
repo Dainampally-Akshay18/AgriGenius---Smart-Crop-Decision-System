@@ -17,9 +17,5 @@ requests==2.31.0
 # Data validation
 pydantic==2.5.0
 
-# ML libraries (for backend integration)
-scikit-learn==1.3.2
-numpy==1.26.2
-pandas==2.1.3
-
 email-validator
+
