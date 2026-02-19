@@ -87,6 +87,3 @@ scripts/*.log
 .kiro 
 .vscode
 
-# ML models
-ml/models/*.pkl
-ml/models/*.h5
