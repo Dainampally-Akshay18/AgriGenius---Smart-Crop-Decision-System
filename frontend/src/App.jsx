@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Navbar from './Components/Navbar';
 import ProtectedRoute from './Components/ProtectedRoute';
+import { SidebarProvider } from './Context/SidebarContext';
 import Login from './Pages/Login';
 import Signup from './Pages/Signup';
 import Dashboard from './Pages/Dashboard';
@@ -14,8 +15,9 @@ import About from './Pages/About';
 function App() {
   return (
     <BrowserRouter>
-      <Navbar />
-      <Routes>
+      <SidebarProvider>
+        <Navbar />
+        <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/about" element={<About />} />
@@ -58,6 +60,7 @@ function App() {
         
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
       </Routes>
+      </SidebarProvider>
     </BrowserRouter>
   );
 }
