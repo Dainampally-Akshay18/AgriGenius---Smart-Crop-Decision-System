@@ -45,7 +45,7 @@ function Missing() {
       <Sidebar />
 
       {/* Main Content */}
-      <div className="flex-1 ml-64 min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
+      <div className="flex-1 ml-64 min-h-[calc(100vh-4rem)] bg-gradient-to-br from-green-50 to-blue-50">
         <div className="p-8">
           {/* Header */}
           <div className="mb-8">

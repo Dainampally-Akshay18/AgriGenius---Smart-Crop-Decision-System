@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import Navbar from './Components/Navbar';
 import ProtectedRoute from './Components/ProtectedRoute';
 import Login from './Pages/Login';
 import Signup from './Pages/Signup';
@@ -8,13 +9,16 @@ import Prediction from './Pages/Prediction';
 import Noise from './Pages/Noise';
 import Missing from './Pages/Missing';
 import Agreement from './Pages/Agreement';
+import About from './Pages/About';
 
 function App() {
   return (
     <BrowserRouter>
+      <Navbar />
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
+        <Route path="/about" element={<About />} />
         
         <Route path="/dashboard" element={
           <ProtectedRoute>

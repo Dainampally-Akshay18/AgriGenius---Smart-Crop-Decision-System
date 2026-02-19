@@ -14,7 +14,7 @@ function Sidebar() {
   const isActive = (path) => location.pathname === path;
 
   return (
-    <aside className="w-64 bg-green-700 text-white h-screen fixed left-0 top-0 pt-6 shadow-lg overflow-y-auto">
+    <aside className="w-64 bg-green-700 text-white h-[calc(100vh-4rem)] fixed left-0 top-16 pt-6 shadow-lg overflow-y-auto">
       {/* Logo/Title */}
       <div className="px-6 mb-8">
         <h2 className="text-2xl font-bold">AgreeGenius</h2>
