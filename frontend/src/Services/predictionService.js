@@ -28,3 +28,26 @@ export const getPredictionInput = () => {
 export const clearPredictionInput = () => {
   localStorage.removeItem('predictionInput');
 };
+
+// Call crop prediction API
+export const predictCrop = async (formData) => {
+  try {
+    const requestBody = {
+      N: parseFloat(formData.N),
+      P: parseFloat(formData.P),
+      K: parseFloat(formData.K),
+      soilType: formData.soilType,
+      season: formData.season,
+      location: formData.city
+    };
+
+    const data = await apiRequest('/api/predict/crop', {
+      method: 'POST',
+      body: JSON.stringify(requestBody)
+    });
+
+    return data;
+  } catch (error) {
+    throw error;
+  }
+};
