@@ -3,6 +3,18 @@ import { useNavigate } from 'react-router-dom';
 import Sidebar from '../Components/Sidebar';
 import { getPredictionInput, evaluateMissing } from '../Services/predictionService';
 
+// Helper: strip "missing_" prefix and capitalise
+const formatFeatureName = (key) => {
+  const label = key.replace(/^missing_/i, '');
+  return label.charAt(0).toUpperCase() + label.slice(1);
+};
+
+// Helper: safe percentage format (handles 0 correctly)
+const toPercent = (value) => {
+  if (value === null || value === undefined) return 'N/A';
+  return (value * 100).toFixed(1) + '%';
+};
+
 function Missing() {
   const navigate = useNavigate();
   const [formData, setFormData] = useState(null);
@@ -39,6 +51,14 @@ function Missing() {
     loadEvaluation();
   }, [navigate]);
 
+  // Determine stability colour
+  const getStabilityColor = (score) => {
+    if (score === null || score === undefined) return 'text-gray-400';
+    if (score >= 0.8) return 'text-green-600';
+    if (score >= 0.5) return 'text-yellow-600';
+    return 'text-red-600';
+  };
+
   return (
     <div className="flex">
       {/* Sidebar */}
@@ -47,13 +67,14 @@ function Missing() {
       {/* Main Content */}
       <div className="flex-1 md:ml-64 min-h-[calc(100vh-4rem)] bg-white w-full md:w-auto">
         <div className="p-8 max-w-6xl mx-auto">
+
           {/* Header */}
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
               Missing Feature Evaluation
             </h1>
             <p className="text-gray-600 text-sm">
-              Assess model robustness when features are missing
+              Assess model robustness when individual features are removed
             </p>
           </div>
 
@@ -62,9 +83,7 @@ function Missing() {
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-12">
               <div className="flex flex-col items-center justify-center space-y-4">
                 <div className="w-12 h-12 border-4 border-green-200 border-t-green-600 rounded-full animate-spin"></div>
-                <p className="text-gray-600">
-                  Testing missing feature impact...
-                </p>
+                <p className="text-gray-600">Testing missing feature impact…</p>
               </div>
             </div>
           )}
@@ -93,71 +112,88 @@ function Missing() {
           {/* Results */}
           {evaluation && !loading && (
             <div className="space-y-6">
-              {/* Key Metrics */}
+
+              {/* ── Key Metrics ── */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+
+                {/* Predicted Crop */}
                 <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                  <p className="text-xs text-gray-600 font-medium uppercase tracking-wide mb-2">Predicted Crop</p>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {evaluation.predicted_crop || 'N/A'}
+                  <p className="text-xs text-gray-600 font-medium uppercase tracking-wide mb-2">
+                    Predicted Crop
+                  </p>
+                  <p className="text-2xl font-bold text-gray-900 capitalize">
+                    {evaluation.predicted_crop ?? 'N/A'}
                   </p>
                 </div>
 
+                {/* Baseline Confidence */}
                 <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
                   <p className="text-xs text-gray-600 font-medium uppercase tracking-wide mb-2">
                     Baseline Confidence
                   </p>
                   <p className="text-2xl font-bold text-gray-900">
-                    {evaluation.baseline_confidence
-                      ? (evaluation.baseline_confidence * 100).toFixed(1)
-                      : 'N/A'}
-                    %
+                    {toPercent(evaluation.baseline_confidence)}
                   </p>
                 </div>
 
+                {/* Stability Score */}
                 <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                  <p className="text-xs text-gray-600 font-medium uppercase tracking-wide mb-2">Stability Score</p>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {evaluation.stability_score
-                      ? (evaluation.stability_score * 100).toFixed(1)
-                      : 'N/A'}
-                    %
+                  <p className="text-xs text-gray-600 font-medium uppercase tracking-wide mb-2">
+                    Stability Score
+                  </p>
+                  <p className={`text-2xl font-bold ${getStabilityColor(evaluation.stability_score)}`}>
+                    {toPercent(evaluation.stability_score)}
                   </p>
                 </div>
 
+                {/* Total Tests */}
                 <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                  <p className="text-xs text-gray-600 font-medium uppercase tracking-wide mb-2">Total Tests</p>
+                  <p className="text-xs text-gray-600 font-medium uppercase tracking-wide mb-2">
+                    Total Tests
+                  </p>
                   <p className="text-2xl font-bold text-gray-900">
-                    {evaluation.total_tests || 0}
+                    {evaluation.total_tests ?? 0}
                   </p>
                 </div>
               </div>
 
-              {/* Summary */}
+              {/* ── Robustness Summary ── */}
               <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8">
                 <h2 className="text-2xl font-bold text-gray-900 mb-6">
                   Robustness Analysis
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                  {/* Prediction Changes */}
                   <div className="p-6 bg-orange-50 rounded-xl border border-orange-100">
                     <p className="text-xs text-gray-600 font-medium uppercase tracking-wide mb-2">
                       Prediction Changes
                     </p>
                     <p className="text-3xl font-bold text-orange-600">
-                      {evaluation.prediction_changes || 0}
+                      {evaluation.prediction_changes ?? 0}
                     </p>
                     <p className="text-xs text-gray-600 mt-3">
-                      Times prediction changed when features missing
+                      Times prediction changed when a feature was removed
                     </p>
                   </div>
 
-                  <div className="p-6 bg-red-50 rounded-xl border border-red-100">
+                  {/* Impact Severity */}
+                  <div
+                    className={`p-6 rounded-xl border ${(evaluation.prediction_changes ?? 0) > 0
+                        ? 'bg-red-50 border-red-100'
+                        : 'bg-green-50 border-green-100'
+                      }`}
+                  >
                     <p className="text-xs text-gray-600 font-medium uppercase tracking-wide mb-2">
                       Impact Severity
                     </p>
-                    <p className="text-3xl font-bold text-red-600">
-                      {evaluation.prediction_changes > 0
-                        ? 'HIGH'
-                        : 'LOW'}
+                    <p
+                      className={`text-3xl font-bold ${(evaluation.prediction_changes ?? 0) > 0
+                          ? 'text-red-600'
+                          : 'text-green-600'
+                        }`}
+                    >
+                      {(evaluation.prediction_changes ?? 0) > 0 ? 'HIGH' : 'LOW'}
                     </p>
                     <p className="text-xs text-gray-600 mt-3">
                       Model sensitivity to missing features
@@ -166,7 +202,7 @@ function Missing() {
                 </div>
               </div>
 
-              {/* Feature Results Table */}
+              {/* ── Feature Impact Table ── */}
               {evaluation.feature_results && (
                 <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8">
                   <h2 className="text-2xl font-bold text-gray-900 mb-6">
@@ -180,48 +216,106 @@ function Missing() {
                             Feature
                           </th>
                           <th className="text-left py-4 px-4 font-semibold text-gray-900 text-sm">
-                            Impact
+                            Prediction
                           </th>
                           <th className="text-right py-4 px-4 font-semibold text-gray-900 text-sm">
-                            Changes
+                            Confidence
+                          </th>
+                          <th className="text-right py-4 px-4 font-semibold text-gray-900 text-sm">
+                            Confidence Drop
+                          </th>
+                          <th className="text-center py-4 px-4 font-semibold text-gray-900 text-sm">
+                            Changed?
+                          </th>
+                          <th className="text-center py-4 px-4 font-semibold text-gray-900 text-sm">
+                            Impact
                           </th>
                         </tr>
                       </thead>
                       <tbody>
                         {Object.entries(evaluation.feature_results).map(
-                          ([feature, data], idx) => (
-                            <tr
-                              key={idx}
-                              className={`border-b border-gray-100 transition-colors ${
-                                idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'
-                              } hover:bg-gray-100`}
-                            >
-                              <td className="py-4 px-4 text-gray-900 font-medium text-sm">
-                                {typeof data === 'object'
-                                  ? data.feature || feature
-                                  : feature}
-                              </td>
-                              <td className="py-4 px-4">
-                                <span
-                                  className={`px-3 py-1.5 rounded-full text-xs font-bold ${
-                                    typeof data === 'object' &&
-                                    data.changes > 0
-                                      ? 'bg-red-100 text-red-700'
-                                      : 'bg-green-100 text-green-700'
-                                  }`}
-                                >
-                                  {typeof data === 'object' && data.changes > 0
-                                    ? 'HIGH'
-                                    : 'LOW'}
-                                </span>
-                              </td>
-                              <td className="py-4 px-4 text-right text-gray-700 font-medium text-sm">
-                                {typeof data === 'object'
-                                  ? data.changes || 0
-                                  : data}
-                              </td>
-                            </tr>
-                          )
+                          ([featureKey, data], idx) => {
+                            /*
+                             * Backend shape per feature:
+                             *   { crop, confidence, changed (bool), confidence_drop }
+                             *
+                             * "changed" means the prediction flipped when this feature was removed.
+                             * "confidence_drop" is positive when confidence went DOWN (high = bad).
+                             */
+                            const featureName = formatFeatureName(featureKey);
+                            const predCrop = data?.crop ?? '—';
+                            const confidence = data?.confidence ?? null;
+                            const confidenceDrop = data?.confidence_drop ?? null;
+                            // changed is a boolean; treat as high impact when true OR large drop
+                            const changed = data?.changed === true;
+                            const isHighImpact =
+                              changed || (confidenceDrop !== null && confidenceDrop > 0.1);
+
+                            return (
+                              <tr
+                                key={featureKey}
+                                className={`border-b border-gray-100 transition-colors ${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'
+                                  } hover:bg-gray-100`}
+                              >
+                                {/* Feature name */}
+                                <td className="py-4 px-4 text-gray-900 font-medium text-sm">
+                                  {featureName}
+                                </td>
+
+                                {/* Crop predicted without this feature */}
+                                <td className="py-4 px-4 text-gray-700 text-sm capitalize">
+                                  {predCrop}
+                                </td>
+
+                                {/* Confidence without this feature */}
+                                <td className="py-4 px-4 text-right text-gray-700 font-medium text-sm">
+                                  {toPercent(confidence)}
+                                </td>
+
+                                {/* Confidence drop (positive = worse) */}
+                                <td className="py-4 px-4 text-right text-sm font-semibold">
+                                  {confidenceDrop === null ? (
+                                    <span className="text-gray-400">N/A</span>
+                                  ) : confidenceDrop > 0 ? (
+                                    <span className="text-red-600">
+                                      ▼ {(confidenceDrop * 100).toFixed(1)}%
+                                    </span>
+                                  ) : confidenceDrop < 0 ? (
+                                    <span className="text-green-600">
+                                      ▲ {(Math.abs(confidenceDrop) * 100).toFixed(1)}%
+                                    </span>
+                                  ) : (
+                                    <span className="text-gray-500">0.0%</span>
+                                  )}
+                                </td>
+
+                                {/* Prediction changed? */}
+                                <td className="py-4 px-4 text-center">
+                                  {changed ? (
+                                    <span className="inline-block px-2 py-1 rounded-full bg-red-100 text-red-700 text-xs font-bold">
+                                      Yes
+                                    </span>
+                                  ) : (
+                                    <span className="inline-block px-2 py-1 rounded-full bg-green-100 text-green-700 text-xs font-bold">
+                                      No
+                                    </span>
+                                  )}
+                                </td>
+
+                                {/* Overall Impact badge */}
+                                <td className="py-4 px-4 text-center">
+                                  <span
+                                    className={`inline-block px-3 py-1.5 rounded-full text-xs font-bold ${isHighImpact
+                                        ? 'bg-red-100 text-red-700'
+                                        : 'bg-green-100 text-green-700'
+                                      }`}
+                                  >
+                                    {isHighImpact ? 'HIGH' : 'LOW'}
+                                  </span>
+                                </td>
+                              </tr>
+                            );
+                          }
                         )}
                       </tbody>
                     </table>
@@ -229,7 +323,7 @@ function Missing() {
                 </div>
               )}
 
-              {/* Navigation Buttons */}
+              {/* ── Navigation Buttons ── */}
               <div className="flex gap-3 pt-2">
                 <button
                   onClick={() => navigate('/prediction/noise')}
@@ -244,6 +338,7 @@ function Missing() {
                   Model Agreement →
                 </button>
               </div>
+
             </div>
           )}
         </div>

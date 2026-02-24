@@ -1,6 +1,6 @@
 # FRONTEND PRODUCT REQUIREMENT DOCUMENT (PRD)
 
-## Product Name: AgreeGenius
+## Product Name: AGRI-GENIUS
 
 AI-Based Crop Recommendation & Model Evaluation Platform
 
@@ -8,7 +8,7 @@ AI-Based Crop Recommendation & Model Evaluation Platform
 
 ## 1. Product Overview
 
-AgreeGenius is a web application that helps users predict suitable crops based on soil nutrients and weather conditions.
+AGRI-GENIUS is a web application that helps users predict suitable crops based on soil nutrients and weather conditions.
 It also provides AI model evaluation tools including noise stability, missing feature impact, and model agreement comparison.
 
 The frontend must provide a guided workflow:
@@ -52,7 +52,7 @@ Introduce the platform and start prediction process.
 
 Contents:
 
-* Brief description of AgreeGenius
+* Brief description of AGRI-GENIUS
 * "Start Predicting" button
 
 Action:
@@ -311,7 +311,7 @@ Do not rename folders.
 Do not change case sensitivity.
 
 
-# API CONTRACT — AGREEGENIUS FRONTEND INTEGRATION
+# API CONTRACT — AGRI-GENIUS FRONTEND INTEGRATION
 
 Base URL:
 http://127.0.0.1:5000
